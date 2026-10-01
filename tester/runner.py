@@ -2,7 +2,7 @@ import json
 import time
 import argparse
 from tester.decoder import DBCDecoder
-from tester.checks import check_heartbeat_timeout, check_alive_counter, check_signal_range
+from tester.checks import check_heartbeat_timeout, check_cycle_time, check_alive_counter, check_signal_range
 from tester.bus import get_socketcan_bus
 
 class TestRunner:
@@ -14,11 +14,14 @@ class TestRunner:
             
         self.last_status_time = None
         self.last_counter = None
+        self.last_temp = 25.0
         self.failures = []
 
     def run_checks(self, duration=5.0):
         start_time = time.time()
         timeout_s = self.config["heartbeat_timeout_ms"] / 1000.0
+        period_s = self.config["status_period_ms"] / 1000.0
+        tol_s = self.config["status_period_tolerance_ms"] / 1000.0
         
         while time.time() - start_time < duration:
             msg = self.bus.recv(timeout=0.1)
@@ -33,12 +36,20 @@ class TestRunner:
                     if not check_heartbeat_timeout(self.last_status_time, now, timeout_s):
                         self.failures.append("Heartbeat timeout exceeded")
                         
+                    if not check_cycle_time(self.last_status_time, now, period_s, tol_s):
+                        self.failures.append("Cycle time out of tolerance")
+                        
                     self.last_status_time = now
                     
                     counter = decoded["alive_counter"]
                     if not check_alive_counter(self.last_counter, counter, self.config["alive_counter_modulus"]):
                         self.failures.append(f"Bad alive counter sequence: {self.last_counter} -> {counter}")
                     self.last_counter = counter
+                    
+                    state = decoded["state"]
+                    if self.last_temp > self.config["temperature"]["max"]:
+                        if state != "FAULT":
+                            self.failures.append("State not FAULT during overtemperature")
                     
                 elif msg.arbitration_id == 0x200:
                     batt = decoded["battery_voltage"]
@@ -47,6 +58,7 @@ class TestRunner:
                         self.failures.append(f"Battery voltage {batt} out of range")
                         
                     temp = decoded["temperature"]
+                    self.last_temp = temp
                     temp_lim = self.config["temperature"]
                     if not check_signal_range(temp, temp_lim["min"], temp_lim["max"]):
                         self.failures.append(f"Temperature {temp} out of range")
