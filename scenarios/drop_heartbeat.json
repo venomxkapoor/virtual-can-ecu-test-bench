@@ -1,0 +1,4 @@
+{
+  "name": "drop_heartbeat",
+  "drop_heartbeat_at_sec": 1.5
+}
