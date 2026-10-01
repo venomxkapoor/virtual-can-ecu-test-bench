@@ -1,0 +1,7 @@
+{
+  "name": "healthy",
+  "overtemperature_at_sec": null,
+  "drop_heartbeat_at_sec": null,
+  "bad_counter_at_sec": null,
+  "low_voltage_at_sec": null
+}
