@@ -2,7 +2,7 @@ import threading
 import os
 import time
 from ecu.ecu_sim import ECUSimulator
-from tester.runner import TestRunner
+from tester.runner import ValidationRunner
 from tester.bus import get_virtual_bus
 
 def run_scenario(scenario_name):
@@ -15,7 +15,7 @@ def run_scenario(scenario_name):
     scen = os.path.join(base_dir, "scenarios", scenario_name)
     
     sim = ECUSimulator(bus1, dbc, scen)
-    tester = TestRunner(bus2, dbc, cfg)
+    tester = ValidationRunner(bus2, dbc, cfg)
     
     t = threading.Thread(target=sim.run, args=(2.5,))
     t.start()
@@ -33,6 +33,12 @@ def test_overtemperature():
     res = run_scenario("overtemperature.json")
     assert res["status"] == "FAIL"
     assert any("Temperature" in f for f in res["failures"])
+
+def test_overtemperature_wrong_state():
+    res = run_scenario("overtemperature_wrong_state.json")
+    assert res["status"] == "FAIL"
+    assert any("Temperature" in f for f in res["failures"])
+    assert any("State not FAULT during overtemperature" in f for f in res["failures"])
 
 def test_drop_heartbeat():
     res = run_scenario("drop_heartbeat.json")

@@ -16,7 +16,31 @@ This project simulates a small vehicle ECU sending heartbeat (ECU_STATUS) and se
 - **DBC**: A file that describes how to unpack raw CAN bytes into meaningful data (like temperature).
 
 ## Architecture diagram
-Please see `docs/ARCHITECTURE.md`.
+```text
++-----------------+
+|  ECU Simulator  |
++--------+--------+
+         | CAN frames
+         v
++-----------------+
+| SocketCAN/vcan0 |
++--------+--------+
+         |
+         v
++-----------------+
+|   DBC Decoder   |
++--------+--------+
+         |
+         v
++-----------------+
+| ValidationRunner|
++--------+--------+
+         |
+         v
++-----------------+
+|   pytest / CI   |
++-----------------+
+```
 
 ## Message table
 | Message | Example ID | Period | Signals | Purpose |
@@ -35,7 +59,11 @@ pytest tests/
 ```
 
 ## How to run the local vcan0 demo
-(Requires Linux/WSL2 with vcan support)
+(Requires Linux/WSL2 with vcan support. `can-utils` provides command-line tools such as candump.)
+```bash
+sudo apt install can-utils
+```
+
 Terminal 1:
 ```bash
 ./scripts/setup_vcan.sh
@@ -64,6 +92,7 @@ python -m tester.runner
 ## Fault scenarios and expected output
 - `healthy`: Status and sensor frames arrive on time; values remain inside limits; counter increments (PASS)
 - `overtemperature`: Temperature rises above the configured limit; ECU state becomes FAULT (Tester detects high temperature and validates FAULT state)
+- `overtemperature_wrong_state`: Temperature rises but state stays RUN (Tester catches invalid ECU behaviour)
 - `drop-heartbeat`: ECU_STATUS stops for longer than the timeout (Heartbeat test FAILS)
 - `bad-counter`: alive_counter repeats or skips unexpectedly (Counter sequence test FAILS)
 - `low-voltage`: Battery voltage falls below minimum (Signal-range test FAILS)
@@ -73,9 +102,3 @@ Tests verify DBC encoding/decoding, timing checks, and full end-to-end simulatio
 
 ## Limitations
 No physical hardware is used.
-
-## What I learned
-See `docs/LEARNING_MAP.md`.
-
-## Future improvements
-In the future, this test bench could be connected to a real USB-to-CAN adapter and used to validate a physical ECU written in C++.

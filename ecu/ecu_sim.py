@@ -19,7 +19,8 @@ class ECUSimulator:
             "overtemperature_at_sec": None,
             "drop_heartbeat_at_sec": None,
             "bad_counter_at_sec": None,
-            "low_voltage_at_sec": None
+            "low_voltage_at_sec": None,
+            "wrong_state": False
         }
         
         if scenario_path and os.path.exists(scenario_path):
@@ -34,7 +35,7 @@ class ECUSimulator:
         self.sensor_period = 0.2
 
     def run(self, duration=None):
-        print(f"Starting ECU Simulator (Scenario: {self.scenario['name']})")
+        print(f"Starting ECU Simulator (Scenario: {self.scenario.get('name', 'unknown')})")
         while True:
             now = time.time()
             elapsed = now - self.start_time
@@ -43,19 +44,20 @@ class ECUSimulator:
                 break
                 
             # Fault injection logic
-            if self.scenario["overtemperature_at_sec"] and elapsed >= self.scenario["overtemperature_at_sec"]:
+            if self.scenario.get("overtemperature_at_sec") and elapsed >= self.scenario["overtemperature_at_sec"]:
                 self.temperature = 110.0
-                self.state = "FAULT"
+                if not self.scenario.get("wrong_state"):
+                    self.state = "FAULT"
                 
-            if self.scenario["low_voltage_at_sec"] and elapsed >= self.scenario["low_voltage_at_sec"]:
+            if self.scenario.get("low_voltage_at_sec") and elapsed >= self.scenario["low_voltage_at_sec"]:
                 self.battery_voltage = 9.0
                 
-            if self.scenario["bad_counter_at_sec"] and elapsed >= self.scenario["bad_counter_at_sec"]:
+            if self.scenario.get("bad_counter_at_sec") and elapsed >= self.scenario["bad_counter_at_sec"]:
                 self.alive_counter = (self.alive_counter + 2) % 16
                 self.scenario["bad_counter_at_sec"] = None # Inject once
                 
             drop_heartbeat = False
-            if self.scenario["drop_heartbeat_at_sec"]:
+            if self.scenario.get("drop_heartbeat_at_sec"):
                 if self.scenario["drop_heartbeat_at_sec"] <= elapsed <= self.scenario["drop_heartbeat_at_sec"] + 1.0:
                     drop_heartbeat = True
 
@@ -88,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("--scenario", default=None, help="Path to scenario JSON")
     args = parser.parse_args()
     
-    bus = can.interface.Bus("vcan0", bustype="socketcan")
+    bus = can.Bus(channel="vcan0", interface="socketcan")
     dbc = os.path.join(os.path.dirname(__file__), "..", "dbc", "demo_ecu.dbc")
     sim = ECUSimulator(bus, dbc, args.scenario)
     try:

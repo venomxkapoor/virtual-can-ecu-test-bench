@@ -6,9 +6,11 @@ def test_heartbeat_timeout():
     assert check_heartbeat_timeout(1.0, 1.5, 0.35) == False
 
 def test_cycle_time():
-    assert check_cycle_time(1.0, 1.1, 0.1, 0.04) == True
-    assert check_cycle_time(1.0, 1.15, 0.1, 0.04) == False
-    assert check_cycle_time(1.0, 1.05, 0.1, 0.04) == True
+    assert check_cycle_time(1.0, 1.059, 0.1, 0.04) == False
+    assert check_cycle_time(1.0, 1.060, 0.1, 0.04) == True
+    assert check_cycle_time(1.0, 1.100, 0.1, 0.04) == True
+    assert check_cycle_time(1.0, 1.140, 0.1, 0.04) == True
+    assert check_cycle_time(1.0, 1.141, 0.1, 0.04) == False
 
 def test_alive_counter():
     assert check_alive_counter(5, 6) == True

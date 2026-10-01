@@ -1,0 +1,5 @@
+{
+  "name": "overtemperature_wrong_state",
+  "overtemperature_at_sec": 1.5,
+  "wrong_state": true
+}

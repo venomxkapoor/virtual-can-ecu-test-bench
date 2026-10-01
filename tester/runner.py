@@ -5,7 +5,7 @@ from tester.decoder import DBCDecoder
 from tester.checks import check_heartbeat_timeout, check_cycle_time, check_alive_counter, check_signal_range
 from tester.bus import get_socketcan_bus
 
-class TestRunner:
+class ValidationRunner:
     def __init__(self, bus, dbc_path, config_path):
         self.bus = bus
         self.decoder = DBCDecoder(dbc_path)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     dbc = os.path.join(os.path.dirname(__file__), "..", "dbc", "demo_ecu.dbc")
     cfg = os.path.join(os.path.dirname(__file__), "..", "config", "test_limits.json")
     
-    runner = TestRunner(bus, dbc, cfg)
+    runner = ValidationRunner(bus, dbc, cfg)
     print("Running tester for 5 seconds...")
     res = runner.run_checks(5.0)
     print(json.dumps(res, indent=2))
