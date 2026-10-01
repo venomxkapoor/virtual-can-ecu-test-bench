@@ -1,8 +1,8 @@
 # Virtual CAN ECU Test Bench
 
 Virtual CAN ECU Test Bench | Python, SocketCAN, python-can, cantools, pytest
-- Built a software-simulated ECU and automated validation bench over Linux virtual CAN, using a DBC to encode and decode status and sensor signals.
-- Implemented pytest checks for heartbeat timing, alive-counter sequencing, signal limits and injected fault scenarios, with CI-safe virtual-bus tests.
+- Simulated ECU communication over Linux virtual CAN using DBC-defined status and sensor messages. 
+- Implemented automated tests for heartbeat/timeout behaviour, cycle-time checking, alive-counter sequencing, signal limits and injected faults, with CI execution through GitHub Actions.
 
 **Limitation Statement:**
 The project uses a software-simulated ECU and virtual CAN interfaces. No physical ECU, CAN adapter, CANoe, dSPACE or real vehicle network was used.
@@ -48,6 +48,18 @@ Terminal 3:
 ```bash
 python -m ecu.ecu_sim
 ```
+Terminal 4:
+```bash
+python -m tester.runner
+```
+
+**Example Output (Terminal 4):**
+```json
+{
+  "status": "PASS",
+  "failures": []
+}
+```
 
 ## Fault scenarios and expected output
 - `healthy`: Status and sensor frames arrive on time; values remain inside limits; counter increments (PASS)
@@ -57,7 +69,7 @@ python -m ecu.ecu_sim
 - `low-voltage`: Battery voltage falls below minimum (Signal-range test FAILS)
 
 ## Automated tests
-Tests verify DBC encoding/decoding, timing checks, and full end-to-end simulation using pytest and a virtual `python-can` backend.
+Tests verify DBC encoding/decoding, timing checks, and full end-to-end simulation using pytest and a virtual `python-can` backend. All tests use strict boundary-value parametrization.
 
 ## Limitations
 No physical hardware is used.
