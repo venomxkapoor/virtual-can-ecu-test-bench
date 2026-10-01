@@ -13,7 +13,7 @@
 *   **How do you detect a missing heartbeat?**
     Check the timestamp delta between received frames against a timeout.
 *   **Why does the alive counter wrap from 15 to 0?**
-    It's stored in a 4-bit field in the CAN payload.
+    The DBC allocates one byte to the alive counter, but this demo intentionally uses values 0–15 and wraps modulo 16.
 *   **Why do timing checks need tolerance?**
     Software timers aren't perfect, especially on non-real-time OSs.
 *   **What is the difference between a unit test and an integration/system test in this repository?**
